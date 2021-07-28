@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>vue-summer-camp week3</title>
+  <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+  <div id="app">
+    <input type="text" placeholder="接下來要做什麼?" v-model="todoText">
+    <button @click="addTodo">➕</button>
+    <div class="todo-list">
+      <ul>
+        <li v-for="item in todolist" :key="item.date">
+          <div v-if="item.isEdit">
+            <input type="text" v-model="item.text"> <button @click="saveTodo(item)">💾</button>
+          </div>
+          <div v-else>
+            <h3>{{ item.text }}<button @click="editTodo(item)">📎</button><button @click="deleteTodo(item)">❌</button></h3>
+          </div>
+          <p>{{ item.date }}</p>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+  <script>
+    const app = Vue.createApp({
+      data() {
+        return {
+          todolist:[],
+          todoText: ''
+        }
+      },
+      methods: {
+        addTodo(){
+          if(!this.todoText) {
+            return
+          }
+          const newTodo = {
+            text: this.todoText,
+            date: Date.now(),
+            isEdit: false
+          }
+          this.todolist.push(newTodo)
+          this.todoText = ''
+        },
+        editTodo(item){
+          item.isEdit = true
+        },
+        saveTodo(item){
+          item.isEdit = false
+        },
+        deleteTodo(item) {
+          const index = this.todolist.findIndex(e=>e.date === item.date)
+          this.todolist.splice(index,1)
+        }
+      },
+      computed: {
+
+      },
+      mounted() {
+
+      },
+    }).mount('#app')
+  </script>
+</body>
+</html>
