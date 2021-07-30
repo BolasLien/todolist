@@ -11,15 +11,21 @@
   <div id="app">
     <input type="text" placeholder="接下來要做什麼?" v-model="todoText">
     <button @click="addTodo">➕</button>
+    <select v-model="filter">
+      <option value="all">全部</option>
+      <option value="complete">已完成</option>
+      <option value="yet">未完成</option>
+    </select>
     <div class="todo-list">
       <ul>
-        <li v-for="item in todolist" :key="item.date">
-          <div v-if="item.isEdit">
+        <li v-for="item in showTodoList" :key="item.date">
+          <input type="checkbox"  v-model="item.isComplete" :id="item.date">
+          <span v-if="item.isEdit">
             <input type="text" v-model="item.text"> <button @click="saveTodo(item)">💾</button>
-          </div>
-          <div v-else>
-            <h3>{{ item.text }}<button @click="editTodo(item)">📎</button><button @click="deleteTodo(item)">❌</button></h3>
-          </div>
+          </span>
+          <label v-else :for="item.date">
+            {{ item.text }}<button @click="editTodo(item)">📝</button><button @click="deleteTodo(item)">❌</button>
+          </label>
           <p>{{ item.date }}</p>
         </li>
       </ul>
@@ -31,7 +37,8 @@
       data() {
         return {
           todolist:[],
-          todoText: ''
+          todoText: '',
+          filter: 'all'
         }
       },
       methods: {
@@ -42,9 +49,11 @@
           const newTodo = {
             text: this.todoText,
             date: Date.now(),
-            isEdit: false
+            isEdit: false,
+            isComplete:false,
           }
           this.todolist.push(newTodo)
+          localStorage.setItem("todolist", JSON.stringify(this.todolist));
           this.todoText = ''
         },
         editTodo(item){
@@ -56,13 +65,35 @@
         deleteTodo(item) {
           const index = this.todolist.findIndex(e=>e.date === item.date)
           this.todolist.splice(index,1)
+        },
+      },
+      watch:{
+        todolist:{
+          handler(value, oldValue) {
+            localStorage.setItem("todolist", JSON.stringify(this.todolist));
+          },
+          deep: true
         }
       },
       computed: {
-
+        showTodoList(){
+          return this.todolist.filter(item=>{
+            if(this.filter === 'complete') {
+              return item.isComplete === true
+            }
+            else if (this.filter === 'yet') {
+              return item.isComplete === false
+            }
+            else {
+              return item
+            }
+          })
+        }
       },
       mounted() {
-
+        if (localStorage.getItem("todolist")) {
+          this.todolist = JSON.parse(localStorage.getItem("todolist"));
+        }
       },
     }).mount('#app')
   </script>
