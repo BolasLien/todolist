@@ -1,74 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>vue-summer-camp week3</title>
   <script src="https://unpkg.com/vue@next"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+    }
+  </style>
 </head>
+
 <body>
-  <div id="app">
-    <input type="text" placeholder="接下來要做什麼?" v-model="todoText">
-    <button @click="addTodo">➕</button>
-    <select v-model="filter">
-      <option value="all">全部</option>
-      <option value="complete">已完成</option>
-      <option value="yet">未完成</option>
-    </select>
-    <div class="todo-list">
-      <ul>
-        <li v-for="item in showTodoList" :key="item.date">
-          <input type="checkbox"  v-model="item.isComplete" :id="item.date">
-          <span v-if="item.isEdit">
-            <input type="text" v-model="item.text"> <button @click="saveTodo(item)">💾</button>
-          </span>
-          <label v-else :for="item.date">
-            {{ item.text }}<button @click="editTodo(item)">📝</button><button @click="deleteTodo(item)">❌</button>
-          </label>
-          <p>{{ item.date }}</p>
-        </li>
-      </ul>
+  <div id="app" class="container is-max-desktop">
+    <div class="panel is-primary">
+      <p class="panel-heading">
+        Todo List
+      </p>
+      <div class="panel-block">
+        <input class="input" type="text" placeholder="接下來要做什麼?" v-model="todoText" @keydown.enter="addTodo">
+        <button class="button is-success" @click="addTodo">新增</button>
+      </div>
+      <div class="panel-tabs">
+        <a @click.prevent="filter = '全部'" :class="{'is-active':filter === '全部'}">全部</a>
+        <a @click.prevent="filter = '已完成'" :class="{'is-active':filter === '已完成'}">已完成</a>
+        <a @click.prevent="filter = '未完成'" :class="{'is-active':filter === '未完成'}">未完成</a>
+      </div>
+
+      <label class="panel-block " v-for="item in showTodoList" :key="item.date">
+        <input type="checkbox" v-model="item.isComplete" :id="item.date">
+        <span class="control">{{ item.text }}</span>
+        <div class="control field is-grouped" v-if="item.isEdit">
+          <div class="control is-expanded">
+            <input class="input is-small" type="text" v-model="item.text">
+          </div>
+          <div class="control">
+            <button class="button is-small is-success" @click="saveTodo(item)">儲存</button>
+          </div>
+          <div class="control">
+            <button class="button is-small is-danger" @click="saveTodo(item)">取消</button>
+          </div>
+        </div>
+        <div class="field is-grouped" v-else>
+          <div class="control">
+            <button class="button is-small is-info" @click="editTodo(item)">編輯</button>
+          </div>
+          <div class="control">
+            <button class="button is-small is-danger" @click="deleteTodo(item)">刪除</button>
+          </div>
+        </div>
+      </label>
+
+      <footer class="footer panel-block">
+        <div class="content has-text-centered">
+          <p>
+            <strong>Vue 3 JS 新手夏令營 第三周 Todo List</strong> by <a href="https://bolaslien.github.io/blog/">小艾</a>
+          </p>
+        </div>
+      </footer>
     </div>
+
 
   </div>
   <script>
     const app = Vue.createApp({
       data() {
         return {
-          todolist:[],
+          todolist: [],
           todoText: '',
-          filter: 'all'
+          filter: '全部'
         }
       },
       methods: {
-        addTodo(){
-          if(!this.todoText) {
+        addTodo() {
+          if (!this.todoText) {
             return
           }
           const newTodo = {
             text: this.todoText,
             date: Date.now(),
             isEdit: false,
-            isComplete:false,
+            isComplete: false,
           }
           this.todolist.push(newTodo)
           localStorage.setItem("todolist", JSON.stringify(this.todolist));
           this.todoText = ''
         },
-        editTodo(item){
+        editTodo(item) {
           item.isEdit = true
         },
-        saveTodo(item){
+        saveTodo(item) {
           item.isEdit = false
         },
         deleteTodo(item) {
-          const index = this.todolist.findIndex(e=>e.date === item.date)
-          this.todolist.splice(index,1)
+          const index = this.todolist.findIndex(e => e.date === item.date)
+          this.todolist.splice(index, 1)
         },
       },
-      watch:{
-        todolist:{
+      watch: {
+        todolist: {
           handler(value, oldValue) {
             localStorage.setItem("todolist", JSON.stringify(this.todolist));
           },
@@ -76,12 +112,12 @@
         }
       },
       computed: {
-        showTodoList(){
-          return this.todolist.filter(item=>{
-            if(this.filter === 'complete') {
+        showTodoList() {
+          return this.todolist.filter(item => {
+            if (this.filter === '已完成') {
               return item.isComplete === true
             }
-            else if (this.filter === 'yet') {
+            else if (this.filter === '未完成') {
               return item.isComplete === false
             }
             else {
@@ -98,4 +134,5 @@
     }).mount('#app')
   </script>
 </body>
+
 </html>
