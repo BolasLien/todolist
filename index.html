@@ -14,6 +14,11 @@
       padding: 0;
       font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
     }
+
+    .line-through {
+      text-decoration: line-through;
+      color: #a8a8a8;
+    }
   </style>
 </head>
 
@@ -23,41 +28,57 @@
       <p class="panel-heading">
         Todo List
       </p>
+      <!-- 新增待辦事項 -->
       <div class="panel-block">
-        <input class="input" type="text" placeholder="接下來要做什麼?" v-model="todoText" @keydown.enter="addTodo">
-        <button class="button is-success" @click="addTodo">新增</button>
+        <div class="control field is-grouped">
+          <div class="control is-expanded">
+            <input class="input" type="text" placeholder="接下來要做什麼?" v-model="todoText" @keydown.enter="addTodo">
+          </div>
+          <div class="control">
+            <button class="button is-success" @click="addTodo">新增</button>
+          </div>
+        </div>
       </div>
+
+      <!-- 過濾 -->
       <div class="panel-tabs">
         <a @click.prevent="filter = '全部'" :class="{'is-active':filter === '全部'}">全部</a>
         <a @click.prevent="filter = '已完成'" :class="{'is-active':filter === '已完成'}">已完成</a>
         <a @click.prevent="filter = '未完成'" :class="{'is-active':filter === '未完成'}">未完成</a>
       </div>
 
+      <!-- 列表 -->
       <label class="panel-block " v-for="item in showTodoList" :key="item.date">
+
+        <!-- 完成勾選 -->
         <input type="checkbox" v-model="item.isComplete" :id="item.date">
-        <span class="control">{{ item.text }}</span>
-        <div class="control field is-grouped" v-if="item.isEdit">
+        <span class="control" :class="{'line-through':item.isComplete}">{{ item.text }}</span>
+
+        <!-- 編輯模式 -->
+        <div class="control field is-grouped" v-if="editItem.date === item.date">
           <div class="control is-expanded">
-            <input class="input is-small" type="text" v-model="item.text">
+            <input class="input is-small" type="text" v-model="editItem.text">
           </div>
           <div class="control">
-            <button class="button is-small is-success" @click="saveTodo(item)">儲存</button>
+            <button class="button is-small is-success" @click.prevent="doneEdit(item)">儲存</button>
           </div>
           <div class="control">
-            <button class="button is-small is-danger" @click="saveTodo(item)">取消</button>
+            <button class="button is-small is-danger" @click.prevent="cancelEdit(item)">取消</button>
           </div>
         </div>
+
+        <!-- 一般模式 -->
         <div class="field is-grouped" v-else>
           <div class="control">
-            <button class="button is-small is-info" @click="editTodo(item)">編輯</button>
+            <button class="button is-small is-info" @click.prevent="editTodo(item)">編輯</button>
           </div>
           <div class="control">
-            <button class="button is-small is-danger" @click="deleteTodo(item)">刪除</button>
+            <button class="button is-small is-danger" @click.prevent="deleteTodo(item)">刪除</button>
           </div>
         </div>
       </label>
 
-      <footer class="footer panel-block">
+      <footer class="footer">
         <div class="content has-text-centered">
           <p>
             <strong>Vue 3 JS 新手夏令營 第三周 Todo List</strong> by <a href="https://bolaslien.github.io/blog/">小艾</a>
@@ -74,29 +95,40 @@
         return {
           todolist: [],
           todoText: '',
-          filter: '全部'
+          editItem: {},
+          filter: '全部',
         }
       },
       methods: {
         addTodo() {
-          if (!this.todoText) {
-            return
-          }
+          if (!this.todoText) return
+
+          // 建立一個todo
           const newTodo = {
             text: this.todoText,
             date: Date.now(),
-            isEdit: false,
             isComplete: false,
           }
+
+          // 存到todolist
           this.todolist.push(newTodo)
+
+          // 存到localStorage
           localStorage.setItem("todolist", JSON.stringify(this.todolist));
+
+          // 清空目前輸入
           this.todoText = ''
         },
         editTodo(item) {
-          item.isEdit = true
+          this.editItem = { ...item }
         },
-        saveTodo(item) {
-          item.isEdit = false
+        cancelEdit(item) {
+          this.editItem = {}
+        },
+        doneEdit(item) {
+          const index = this.todolist.findIndex(e => e.date === item.date)
+          this.todolist[index] = this.editItem
+          this.editItem = {}
         },
         deleteTodo(item) {
           const index = this.todolist.findIndex(e => e.date === item.date)
@@ -106,12 +138,14 @@
       watch: {
         todolist: {
           handler(value, oldValue) {
+            // 有變動就更新localStorage
             localStorage.setItem("todolist", JSON.stringify(this.todolist));
           },
           deep: true
         }
       },
       computed: {
+        // 過濾要顯示的todo
         showTodoList() {
           return this.todolist.filter(item => {
             if (this.filter === '已完成') {
