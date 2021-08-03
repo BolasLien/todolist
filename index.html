@@ -23,6 +23,10 @@
 </head>
 
 <body>
+  <section class="section container is-max-desktop">
+    <h1 class="title">Todo List</h1>
+    <h2 class="subtitle">幫你記得接下來要做的事情，從此不再遺忘！ made by <a href="https://bolaslien.github.io/blog/">小艾</a></h2>
+  </section>
   <div id="app" class="container is-max-desktop">
     <div class="panel is-info">
       <p class="panel-heading">
@@ -32,7 +36,7 @@
       <div class="panel-block">
         <div class="control field is-grouped">
           <div class="control is-expanded">
-            <input class="input" type="text" placeholder="接下來要做什麼?" v-model="todoText" @keydown.enter="addTodo">
+            <input class="input" type="text" placeholder="接下來要做什麼？" v-model="todoText" @keydown.enter="addTodo">
           </div>
           <div class="control">
             <button class="button is-success" @click="addTodo">新增</button>
@@ -80,17 +84,15 @@
 
       <footer class="footer">
         <div class="content has-text-centered">
-          <p>
-            <strong>Vue 3 JS 新手夏令營 第三周 Todo List</strong> by <a href="https://bolaslien.github.io/blog/">小艾</a>
-          </p>
+          <a @click.prevent="clearTodoList">清除所有事項</a>
         </div>
       </footer>
     </div>
 
-
   </div>
+
   <script>
-    const app = Vue.createApp({
+    Vue.createApp({
       data() {
         return {
           todolist: [],
@@ -134,6 +136,9 @@
           const index = this.todolist.findIndex(item => item.id === targetId)
           this.todolist.splice(index, 1)
         },
+        clearTodoList(){
+          this.todolist = []
+        }
       },
       watch: {
         todolist: {
