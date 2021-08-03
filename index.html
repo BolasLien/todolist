@@ -24,7 +24,7 @@
 
 <body>
   <div id="app" class="container is-max-desktop">
-    <div class="panel is-primary">
+    <div class="panel is-info">
       <p class="panel-heading">
         Todo List
       </p>
@@ -48,22 +48,22 @@
       </div>
 
       <!-- 列表 -->
-      <label class="panel-block " v-for="item in showTodoList" :key="item.date">
+      <label class="panel-block " v-for="item in showTodoList" :key="item.id">
 
         <!-- 完成勾選 -->
-        <input type="checkbox" v-model="item.isComplete" :id="item.date">
+        <input type="checkbox" v-model="item.isComplete" :id="item.id">
         <span class="control" :class="{'line-through':item.isComplete}">{{ item.text }}</span>
 
         <!-- 編輯模式 -->
-        <div class="control field is-grouped" v-if="editItem.date === item.date">
+        <div class="control field is-grouped" v-if="editItem.id === item.id">
           <div class="control is-expanded">
             <input class="input is-small" type="text" v-model="editItem.text">
           </div>
           <div class="control">
-            <button class="button is-small is-success" @click.prevent="doneEdit(item)">儲存</button>
+            <button class="button is-small is-success" @click.prevent="doneEdit(item.id)">儲存</button>
           </div>
           <div class="control">
-            <button class="button is-small is-danger" @click.prevent="cancelEdit(item)">取消</button>
+            <button class="button is-small is-danger" @click.prevent="cancelEdit">取消</button>
           </div>
         </div>
 
@@ -73,7 +73,7 @@
             <button class="button is-small is-info" @click.prevent="editTodo(item)">編輯</button>
           </div>
           <div class="control">
-            <button class="button is-small is-danger" @click.prevent="deleteTodo(item)">刪除</button>
+            <button class="button is-small is-danger" @click.prevent="deleteTodo(item.id)">刪除</button>
           </div>
         </div>
       </label>
@@ -106,7 +106,7 @@
           // 建立一個todo
           const newTodo = {
             text: this.todoText,
-            date: Date.now(),
+            id: Date.now(),
             isComplete: false,
           }
 
@@ -122,16 +122,16 @@
         editTodo(item) {
           this.editItem = { ...item }
         },
-        cancelEdit(item) {
+        cancelEdit() {
           this.editItem = {}
         },
-        doneEdit(item) {
-          const index = this.todolist.findIndex(e => e.date === item.date)
+        doneEdit(targetId) {
+          const index = this.todolist.findIndex(item => item.id === targetId)
           this.todolist[index] = this.editItem
           this.editItem = {}
         },
-        deleteTodo(item) {
-          const index = this.todolist.findIndex(e => e.date === item.date)
+        deleteTodo(targetId) {
+          const index = this.todolist.findIndex(item => item.id === targetId)
           this.todolist.splice(index, 1)
         },
       },
