@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>vue-summer-camp week4</title>
+  <script src="https://unpkg.com/vue@next"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+    }
+
+    .line-through {
+      text-decoration: line-through;
+      color: #a8a8a8;
+    }
+  </style>
+</head>
+
+<body>
+  <section class="section container is-max-desktop">
+    <h1 class="title">Todo List</h1>
+    <h2 class="subtitle">幫你記得接下來要做的事情，從此不再遺忘！ made by <a href="https://bolaslien.github.io/blog/">小艾</a></h2>
+  </section>
+  <div id="app" class="container is-max-desktop">
+    <div class="panel is-info">
+      <p class="panel-heading">
+        Todo List
+      </p>
+      <!-- 新增待辦事項 -->
+      <div class="panel-block">
+        <div class="control field is-grouped">
+          <div class="control is-expanded">
+            <input class="input" type="text" placeholder="接下來要做什麼？" v-model="todoText" @keydown.enter="addTodo">
+          </div>
+          <div class="control">
+            <button class="button is-success" @click="addTodo">新增</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 過濾 -->
+      <div class="panel-tabs">
+        <a @click.prevent="filter = '全部'" :class="{'is-active':filter === '全部'}">全部</a>
+        <a @click.prevent="filter = '已完成'" :class="{'is-active':filter === '已完成'}">已完成</a>
+        <a @click.prevent="filter = '未完成'" :class="{'is-active':filter === '未完成'}">未完成</a>
+      </div>
+
+      <!-- 列表 -->
+      <label class="panel-block " v-for="item in showTodoList" :key="item.id">
+
+        <!-- 完成勾選 -->
+        <input type="checkbox" v-model="item.isComplete" :id="item.id">
+        <span class="control" :class="{'line-through':item.isComplete}">{{ item.text }}</span>
+
+        <!-- 編輯模式 -->
+        <div class="control field is-grouped" v-if="editItem.id === item.id">
+          <div class="control is-expanded">
+            <input class="input is-small" type="text" v-model="editItem.text">
+          </div>
+          <div class="control">
+            <button class="button is-small is-success" @click.prevent="doneEdit(item.id)">儲存</button>
+          </div>
+          <div class="control">
+            <button class="button is-small is-danger" @click.prevent="cancelEdit">取消</button>
+          </div>
+        </div>
+
+        <!-- 一般模式 -->
+        <div class="field is-grouped" v-else>
+          <div class="control">
+            <button class="button is-small is-info" @click.prevent="editTodo(item)">編輯</button>
+          </div>
+          <div class="control">
+            <button class="button is-small is-danger" @click.prevent="deleteTodo(item.id)">刪除</button>
+          </div>
+        </div>
+      </label>
+
+      <footer class="footer">
+        <div class="content has-text-centered">
+          <a @click.prevent="clearTodoList">清除所有事項</a>
+        </div>
+      </footer>
+    </div>
+
+  </div>
+
+  <script>
+    Vue.createApp({
+      setup() {
+        // 待辦清單
+        const todolist = Vue.ref([])
+
+        // 新增功能
+        const todoText = Vue.ref('')
+        const addTodo = () => {
+          if (!todoText.value) return
+
+          // 建立一個todo
+          const newTodo = {
+            text: todoText.value,
+            id: Date.now(),
+            isComplete: false,
+          }
+
+          // 存到todolist
+          todolist.value.push(newTodo)
+
+          // 清空目前輸入
+          todoText.value = ''
+        }
+
+        // 編輯功能
+        const editItem = Vue.ref({})
+        const editTodo = (item) => {
+          editItem.value = { ...item }
+        }
+        const cancelEdit = () => {
+          editItem.value = {}
+        }
+        const doneEdit = (targetId) => {
+          const index = todolist.value.findIndex(item => item.id === targetId)
+          todolist.value[index] = editItem.value
+          editItem.value = {}
+        }
+
+        // 刪除一個
+        const deleteTodo = (targetId) => {
+          const index = todolist.value.findIndex(item => item.id === targetId)
+          todolist.value.splice(index, 1)
+        }
+
+        // 刪除全部
+        const clearTodoList = () => {
+          todolist.value = []
+        }
+
+        // 顯示相關
+        const filter = Vue.ref('全部')
+        const showTodoList = Vue.computed(()=>{
+          return todolist.value.filter(item => {
+            if (filter.value === '已完成') {
+              return item.isComplete === true
+            }
+            else if (filter.value === '未完成') {
+              return item.isComplete === false
+            }
+            else {
+              return item
+            }
+          })
+        })
+
+        // 監聽Todolist來更新localStorage
+        Vue.watch(todolist, (value,oldValue)=> {
+          localStorage.setItem("todolist", JSON.stringify(todolist.value));
+        }, {deep:true} )
+
+        // 初始化，如果localStorage有東西，就更新到todolist
+        Vue.onMounted(() => {
+          if (localStorage.getItem("todolist")) {
+            todolist.value = JSON.parse(localStorage.getItem("todolist"));
+          }
+        })
+
+        return {
+          todolist,
+          todoText,
+          addTodo,
+
+          editItem,
+          editTodo,
+          cancelEdit,
+          doneEdit,
+          deleteTodo,
+          clearTodoList,
+
+          filter,
+          showTodoList
+        }
+      }
+    }).mount('#app')
+  </script>
+</body>
+
+</html>
