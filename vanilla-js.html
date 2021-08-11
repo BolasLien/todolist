@@ -6,7 +6,6 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>html5-css3-z project4</title>
-  <!-- <script src="https://unpkg.com/vue@next"></script> -->
   <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css" rel="stylesheet">
   <style>
     * {
@@ -46,9 +45,9 @@
 
       <!-- 過濾 -->
       <div class="panel-tabs">
-        <a class="filter-button" @click.prevent="filter = '全部'" :class="{'is-active':filter === '全部'}">全部</a>
-        <a class="filter-button" @click.prevent="filter = '已完成'" :class="{'is-active':filter === '已完成'}">已完成</a>
-        <a class="filter-button" @click.prevent="filter = '未完成'" :class="{'is-active':filter === '未完成'}">未完成</a>
+        <a class="filter-button" data-filter="全部">全部</a>
+        <a class="filter-button" data-filter="已完成">已完成</a>
+        <a class="filter-button" data-filter="未完成">未完成</a>
       </div>
 
       <div class="list"></div>
@@ -95,27 +94,25 @@
   <script>
     const addInput = document.querySelector('.add-input')
     const addButton = document.querySelector('.add-button')
-    const filterButton = document.querySelectorAll('.filter-button')
+    const filterButtons = document.querySelectorAll('.filter-button')
     const list = document.querySelector('.list')
     const todoTemplate = document.querySelector('.todo-template')
     const clearAllButton = document.querySelector('.clear-all-button')
 
 
     let todolist = []
-    let todoText = ''
-    let filter = '全部'
 
-    const init = ()=>{
+    const init = () => {
       todoTemplate.remove()
-
+      filterButtons[0].click()
     }
 
     // 新增一項 todo
     const addTodo = (e) => {
-      if (!todoText) return
+      if (!addInput.value.trim()) return
 
       const newTodo = {
-        text: todoText,
+        text: addInput.value,
         id: Date.now(),
         isComplete: false,
       }
@@ -127,22 +124,18 @@
       createTodo(newTodo)
 
       // 清空輸入
-      todoText = ''
       addInput.value = ''
     }
 
-    // 刪除全部
+    // 刪除全部 todo
     const clearTodoList = (e) => {
       e.preventDefault()
       todolist = []
       let todoItems = list.querySelectorAll('.todo-item')
-      todoItems.forEach(item=>{
+      todoItems.forEach(item => {
         item.remove()
       })
     }
-
-    // const
-
 
     // 建立 Todo Element
     const createTodo = ({ text, id, isComplete }) => {
@@ -221,7 +214,7 @@
       }
 
       // 完成 todo
-      const completeTodo = (e) => {
+      function completeTodo(e) {
         const index = todolist.findIndex(item => item.id === id)
         todolist[index].isComplete = this.checked
         textElement.classList.toggle('line-through')
@@ -238,12 +231,54 @@
       list.appendChild(todoElement)
     }
 
-    addInput.addEventListener('change', function (e) {
-      todoText = this.value
-    })
+    // 過濾特定的 todo
+    function filterTodo(e){
+      e.preventDefault()
+      // 取得點選的過濾的值
+      const filter = this.getAttribute('data-filter')
 
+      // 把舊的 list 從畫面上移除
+      let todoItems = list.querySelectorAll('.todo-item')
+      todoItems.forEach(item => {
+        item.remove()
+      })
+
+      // 過濾要顯示的 list
+      let showList = []
+      if (filter === '已完成') {
+        showList = todolist.filter(item => item.isComplete === true)
+      }
+      else if (filter === '未完成') {
+        showList = todolist.filter(item => item.isComplete === false)
+      }
+      else {
+        showList = todolist
+      }
+
+      // 把過濾完的 list 放到畫面上
+      showList.forEach(item => {
+        createTodo(item)
+      })
+
+      // filter button 換樣式
+      filterButtons.forEach(button => {
+        if (button.getAttribute('data-filter') === filter) {
+          button.classList.add('is-active')
+        } else {
+          button.classList.remove('is-active')
+        }
+      })
+    }
+
+    addInput.addEventListener('keyup', function (e) {
+      e.key === 'Enter' && addTodo(e)
+    })
     addButton.addEventListener('click', addTodo)
     clearAllButton.addEventListener('click', clearTodoList)
+    filterButtons.forEach(button => {
+      button.addEventListener('click', filterTodo)
+    })
+
     init()
   </script>
 </body>
