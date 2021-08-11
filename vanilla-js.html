@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>html5-css3-z project4</title>
+  <!-- <script src="https://unpkg.com/vue@next"></script> -->
+  <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+    }
+
+    .line-through {
+      text-decoration: line-through;
+      color: #a8a8a8;
+    }
+  </style>
+</head>
+
+<body>
+  <section class="section container is-max-desktop">
+    <h1 class="title">Todo List</h1>
+    <h2 class="subtitle">幫你記得接下來要做的事情，從此不再遺忘！ made by <a href="https://bolaslien.github.io/blog/">小艾</a></h2>
+  </section>
+  <div id="app" class="container is-max-desktop">
+    <div class="panel is-info">
+      <p class="panel-heading">
+        Todo List
+      </p>
+      <!-- 新增待辦事項 -->
+      <div class="panel-block">
+        <div class="control field is-grouped">
+          <div class="control is-expanded">
+            <input class="input add-input" type="text" placeholder="接下來要做什麼？">
+          </div>
+          <div class="control">
+            <button class="button is-success add-button">新增</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 過濾 -->
+      <div class="panel-tabs">
+        <a class="filter-button" @click.prevent="filter = '全部'" :class="{'is-active':filter === '全部'}">全部</a>
+        <a class="filter-button" @click.prevent="filter = '已完成'" :class="{'is-active':filter === '已完成'}">已完成</a>
+        <a class="filter-button" @click.prevent="filter = '未完成'" :class="{'is-active':filter === '未完成'}">未完成</a>
+      </div>
+
+      <div class="list"></div>
+      <!-- 列表 -->
+      <label class="panel-block todo-template">
+
+        <!-- 完成勾選 -->
+        <input class="todo-complete" type="checkbox">
+        <span class="control todo-text"></span>
+
+        <!-- 編輯模式 -->
+        <div class="control field is-grouped todo-control-edit">
+          <div class="control is-expanded">
+            <input class="input is-small edit-text" type="text">
+          </div>
+          <div class="control">
+            <button class="button is-small is-success done-edit-button">儲存</button>
+          </div>
+          <div class="control">
+            <button class="button is-small is-danger cancel-edit-button">取消</button>
+          </div>
+        </div>
+
+        <!-- 一般模式 -->
+        <div class="field is-grouped todo-control-normal">
+          <div class="control">
+            <button class="button is-small is-info edit-button">編輯</button>
+          </div>
+          <div class="control">
+            <button class="button is-small is-danger delete-button">刪除</button>
+          </div>
+        </div>
+      </label>
+
+      <footer class="footer">
+        <div class="content has-text-centered">
+          <a class="clear-all-button">清除所有事項</a>
+        </div>
+      </footer>
+    </div>
+
+  </div>
+
+  <script>
+    const addInput = document.querySelector('.add-input')
+    const addButton = document.querySelector('.add-button')
+    const filterButton = document.querySelectorAll('.filter-button')
+    const list = document.querySelector('.list')
+    const todoTemplate = document.querySelector('.todo-template')
+    const clearAllButton = document.querySelector('.clear-all-button')
+
+
+    let todolist = []
+    let todoText = ''
+    let filter = '全部'
+
+    const init = ()=>{
+      todoTemplate.remove()
+
+    }
+
+    // 新增一項 todo
+    const addTodo = (e) => {
+      if (!todoText) return
+
+      const newTodo = {
+        text: todoText,
+        id: Date.now(),
+        isComplete: false,
+      }
+
+      // 新增 todo 的資料
+      todolist.push(newTodo)
+
+      // 新增 todo 的 Element
+      createTodo(newTodo)
+
+      // 清空輸入
+      todoText = ''
+      addInput.value = ''
+    }
+
+    // 刪除全部
+    const clearTodoList = (e) => {
+      e.preventDefault()
+      todolist = []
+      let todoItems = list.querySelectorAll('.todo-item')
+      todoItems.forEach(item=>{
+        item.remove()
+      })
+    }
+
+    // const
+
+
+    // 建立 Todo Element
+    const createTodo = ({ text, id, isComplete }) => {
+      const todoElement = todoTemplate.cloneNode(true)
+
+      // 完成勾選 及 todo text
+      const completeElement = todoElement.querySelector('.todo-complete')
+      const textElement = todoElement.querySelector('.todo-text')
+
+      // 編輯模式 template
+      const editControl = todoElement.querySelector('.todo-control-edit')
+      const EditTextElement = todoElement.querySelector('.edit-text')
+      const doneEditButton = todoElement.querySelector('.done-edit-button')
+      const cancelEditButton = todoElement.querySelector('.cancel-edit-button')
+
+      // 一般模式 template
+      const normalControl = todoElement.querySelector('.todo-control-normal')
+      const editButton = todoElement.querySelector('.edit-button')
+      const deleteButton = todoElement.querySelector('.delete-button')
+
+      // 初始化
+      const init = () => {
+        todoElement.classList.remove("todo-template")
+        todoElement.classList.add("todo-item")
+        // 設定 todo id
+        todoElement.setAttribute('id', id)
+        // 設定 todo isComplete
+        completeElement.checked = isComplete
+        // 設定 todo text
+        textElement.innerText = text
+        editControl.remove()
+      }
+
+      // 編輯模式開關
+      const toggleEditControl = (isEdit) => {
+        if (isEdit) {
+          normalControl.remove()
+          todoElement.appendChild(editControl)
+        } else {
+          editControl.remove()
+          todoElement.appendChild(normalControl)
+        }
+      }
+
+      // 完成編輯
+      const doneEdit = (e) => {
+        e.preventDefault();
+        const index = todolist.findIndex(item => item.id === id)
+        todolist[index].text = EditTextElement.value
+        textElement.innerText = EditTextElement.value
+        EditTextElement.value = ''
+        toggleEditControl(false)
+      }
+
+      // 取消編輯
+      const cancelEdit = (e) => {
+        e.preventDefault();
+        toggleEditControl(false)
+      }
+
+
+      // 編輯 todo
+      const editTodo = (e) => {
+        e.preventDefault();
+        const index = todolist.findIndex(item => item.id === id)
+        EditTextElement.value = todolist[index].text
+        toggleEditControl(true)
+      }
+
+      // 刪除 todo
+      const deleteTodo = (e) => {
+        e.preventDefault();
+        const index = todolist.findIndex(item => item.id === id)
+        todolist.splice(index, 1)
+        todoElement.remove()
+      }
+
+      // 完成 todo
+      const completeTodo = (e) => {
+        const index = todolist.findIndex(item => item.id === id)
+        todolist[index].isComplete = this.checked
+        textElement.classList.toggle('line-through')
+      }
+
+      // 事件綁定
+      doneEditButton.addEventListener("click", doneEdit)
+      cancelEditButton.addEventListener("click", cancelEdit)
+      editButton.addEventListener("click", editTodo)
+      deleteButton.addEventListener('click', deleteTodo)
+      completeElement.addEventListener('change', completeTodo)
+
+      init()
+      list.appendChild(todoElement)
+    }
+
+    addInput.addEventListener('change', function (e) {
+      todoText = this.value
+    })
+
+    addButton.addEventListener('click', addTodo)
+    clearAllButton.addEventListener('click', clearTodoList)
+    init()
+  </script>
+</body>
+
+</html>
