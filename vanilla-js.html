@@ -50,9 +50,8 @@
         <a class="filter-button" data-filter="未完成">未完成</a>
       </div>
 
-      <div class="list"></div>
       <!-- 列表 -->
-      <label class="panel-block todo-template">
+      <label class="panel-block todo-item todo-template">
 
         <!-- 完成勾選 -->
         <input class="todo-complete" type="checkbox">
@@ -95,16 +94,20 @@
     const addInput = document.querySelector('.add-input')
     const addButton = document.querySelector('.add-button')
     const filterButtons = document.querySelectorAll('.filter-button')
-    const list = document.querySelector('.list')
     const todoTemplate = document.querySelector('.todo-template')
     const clearAllButton = document.querySelector('.clear-all-button')
 
-
     let todolist = []
+    let filterData = '全部'
 
     const init = () => {
       todoTemplate.remove()
-      filterButtons[0].click()
+      resetFilter()
+
+      if (localStorage.getItem("todolist")) {
+        todolist = JSON.parse(localStorage.getItem("todolist"));
+        todolist.forEach(item => createTodo(item))
+      }
     }
 
     // 新增一項 todo
@@ -120,25 +123,43 @@
       // 新增 todo 的資料
       todolist.push(newTodo)
 
+      // 存到localStorage
+      localStorage.setItem("todolist", JSON.stringify(todolist));
+
       // 新增 todo 的 Element
       createTodo(newTodo)
 
       // 清空輸入
       addInput.value = ''
+
+      resetFilter()
+    }
+
+    // 用 id 取得 todo 資料
+    const todoDataById = (id) => {
+      let index = todolist.findIndex(item => item.id === id)
+      return todolist[index]
+    }
+
+    // 移除畫面上的全部 todo
+    const removeTodoItems = () => {
+      document.querySelectorAll('.todo-item').forEach(item => {
+        item.remove()
+      })
     }
 
     // 刪除全部 todo
     const clearTodoList = (e) => {
       e.preventDefault()
       todolist = []
-      let todoItems = list.querySelectorAll('.todo-item')
-      todoItems.forEach(item => {
-        item.remove()
-      })
+      // 存到localStorage
+      localStorage.setItem("todolist", JSON.stringify(todolist));
+      removeTodoItems()
     }
 
     // 建立 Todo Element
     const createTodo = ({ text, id, isComplete }) => {
+      // 從 template 複製一個 todo
       const todoElement = todoTemplate.cloneNode(true)
 
       // 完成勾選 及 todo text
@@ -159,11 +180,13 @@
       // 初始化
       const init = () => {
         todoElement.classList.remove("todo-template")
-        todoElement.classList.add("todo-item")
         // 設定 todo id
         todoElement.setAttribute('id', id)
         // 設定 todo isComplete
         completeElement.checked = isComplete
+        if(isComplete) {
+          textElement.classList.toggle('line-through')
+        }
         // 設定 todo text
         textElement.innerText = text
         editControl.remove()
@@ -183,11 +206,12 @@
       // 完成編輯
       const doneEdit = (e) => {
         e.preventDefault();
-        const index = todolist.findIndex(item => item.id === id)
-        todolist[index].text = EditTextElement.value
+        todoDataById(id).text = EditTextElement.value
         textElement.innerText = EditTextElement.value
         EditTextElement.value = ''
         toggleEditControl(false)
+        // 存到localStorage
+        localStorage.setItem("todolist", JSON.stringify(todolist));
       }
 
       // 取消編輯
@@ -196,12 +220,10 @@
         toggleEditControl(false)
       }
 
-
       // 編輯 todo
       const editTodo = (e) => {
         e.preventDefault();
-        const index = todolist.findIndex(item => item.id === id)
-        EditTextElement.value = todolist[index].text
+        EditTextElement.value = todoDataById(id).text
         toggleEditControl(true)
       }
 
@@ -211,13 +233,16 @@
         const index = todolist.findIndex(item => item.id === id)
         todolist.splice(index, 1)
         todoElement.remove()
+        // 存到localStorage
+        localStorage.setItem("todolist", JSON.stringify(todolist));
       }
 
       // 完成 todo
-      function completeTodo(e) {
-        const index = todolist.findIndex(item => item.id === id)
-        todolist[index].isComplete = this.checked
+      const completeTodo = (e) => {
+        todoDataById(id).isComplete = completeElement.checked
         textElement.classList.toggle('line-through')
+        // 存到localStorage
+        localStorage.setItem("todolist", JSON.stringify(todolist));
       }
 
       // 事件綁定
@@ -228,20 +253,22 @@
       completeElement.addEventListener('change', completeTodo)
 
       init()
-      list.appendChild(todoElement)
+      document.querySelector('.footer').insertAdjacentElement('beforebegin', todoElement)
+    }
+
+    const resetFilter = () => {
+      filterButtons.forEach(button=>{
+        filterData === button.getAttribute("data-filter") && button.click()
+      })
     }
 
     // 過濾特定的 todo
-    function filterTodo(e){
+    function filterTodo(e) {
       e.preventDefault()
       // 取得點選的過濾的值
       const filter = this.getAttribute('data-filter')
 
-      // 把舊的 list 從畫面上移除
-      let todoItems = list.querySelectorAll('.todo-item')
-      todoItems.forEach(item => {
-        item.remove()
-      })
+      removeTodoItems()
 
       // 過濾要顯示的 list
       let showList = []
@@ -268,8 +295,11 @@
           button.classList.remove('is-active')
         }
       })
+
+      filterData = filter
     }
 
+    // 事件綁定
     addInput.addEventListener('keyup', function (e) {
       e.key === 'Enter' && addTodo(e)
     })
