@@ -1,30 +1,56 @@
 # todolist
 
-紀錄寫法上的差異
+[see in Github](https://github.com/BolasLien/todolist)
 
-## Vue option api
+### 為什麼大家都在做 TodoList
+
+因為 todolist 包含完整的 CRUD 行為，又功能需求不複雜，很適合當作小專案來練習。
+
+### 我的 TodoList 功能
+
+- 可以 `新增、呈現、編輯、刪除` todo
+- 可以 `完成` todo
+- 可以 `過濾(全部、已完成、未完成)` todo
+- 可以把 todolist `存到 LocalStorage`
+- 用 [bulma](https://bulma.io/) 自創版型
+
+### 用不同的寫法來實作 TodoList
+
+|        寫法         |                               Demo link                               |                                     Code link                                      |
+| :-----------------: | :-------------------------------------------------------------------: | :--------------------------------------------------------------------------------: |
+|   Vue options api   |   [demo](https://bolaslien.github.io/todolist/vue-options-api.html)   |   [code](https://github.com/BolasLien/todolist/blob/master/vue-options-api.html)   |
+| Vue composition api | [demo](https://bolaslien.github.io/todolist/vue-composition-api.html) | [code](https://github.com/BolasLien/todolist/blob/master/vue-composition-api.html) |
+|     Vanilla js      |     [demo](https://bolaslien.github.io/todolist/vanilla-js.html)      |     [code](https://github.com/BolasLien/todolist/blob/master/vanilla-js.html)      |
+
+---
+
+以下紀錄寫法上的差異
+
+## Vue options api
 
 Vue2 的寫法 (Vue3 也通)
 
 ### 起手式
+
 ```js
 //
 Vue.createApp({
-  data(){
+  data() {
     return {
       // 資料
     }
   },
-  methods:{
+  methods: {
     // 方法
   },
-  mounted(){
+  mounted() {
     // 生命週期
-  }
+  },
 }).mount()
 ```
 
 ### 不容易迷路
+
 因為已經知道甚麼東西會寫在哪裡，在閱讀上比較不會迷路
 例如：要知道`@click="addTodo"`是觸發哪個 method，就去 method object 裡面找
 
@@ -85,6 +111,7 @@ Vue.createApp({
 
 改用`ref`、`reactive`的方式來存 data，取值的時候改為`.value`。
 method 就像一般 function 的寫法，要用的話直接呼叫。
+
 ```js
 Vue.createApp({
   setup() {
@@ -93,7 +120,7 @@ Vue.createApp({
     const todoText = Vue.ref('')
 
     // 刪除一個
-    const deleteTodo = (targetId) => {
+    const deleteTodo = targetId => {
       const index = todolist.value.findIndex(item => item.id === targetId)
       todolist.value.splice(index, 1)
     }
@@ -108,29 +135,27 @@ Vue.createApp({
       todolist,
       todoText,
       deleteTodo,
-      clearTodoList
+      clearTodoList,
     }
   },
 }).mount()
 ```
 
-computed 的寫法，依然是以前那個function return的味道。
+computed 的寫法，依然是以前那個 function return 的味道。
+
 ```js
-const showTodoList = Vue.computed(()=>{
+const showTodoList = Vue.computed(() => {
   return todolist.value.filter(item => {
     if (filter.value === '已完成') {
       return item.isComplete === true
-    }
-    else if (filter.value === '未完成') {
+    } else if (filter.value === '未完成') {
       return item.isComplete === false
-    }
-    else {
+    } else {
       return item
     }
   })
 })
 ```
-
 
 ### 可以讓程式碼的功能做更好的分類
 
@@ -152,6 +177,7 @@ const showTodoList = Vue.computed(()=>{
 處理資料跟處理畫面的功能很容易寫在一起。
 
 ### 很容易踩到作用域跟執行順序的坑
+
 執行順序的坑：
 要自己定義程式的流程，例如初始化的時候要做甚麼事情，要甚麼時候才執行初始化？這都要看程式碼的順序決定呼叫的位置。
 
